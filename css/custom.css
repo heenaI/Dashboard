@@ -1,0 +1,14 @@
+/* Cleanizr v.1.2.2 - custom.css
+ *
+ * @note : Any enhancement should be done in this file
+ * @author : hina imran
+ * @author URL : your url
+ *
+ */
+ @import url('icons/fontawesome/font-awesome.min.css');
+ 
+
+widget.lime > header {
+border-bottom: 1px solid #8CBF26;
+background-color: #8CBF26;
+}
