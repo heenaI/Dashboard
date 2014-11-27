@@ -1,0 +1,315 @@
+ <!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="http://code.jquery.com/jquery.js"></script>
+	<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+	<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+	
+	<style> 
+		html, body
+  {
+   width:99%;
+   height:99%;
+  }
+
+   path { 
+    stroke: #FF9900;
+    stroke-width: 2;
+    fill: none;
+    padding-left: 20px;
+    }
+
+   .axis path,
+   .axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1.5;
+    shape-rendering: crispEdges;
+    }
+    
+    .area {
+    fill: #FF9900;
+    stroke-width: 0;
+    opacity: 0.4;
+    }
+    
+    .xAxis{
+	font-size: 12px;
+	font-family: Arial;
+		}
+		
+   .d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: #545454;
+  color: #fff;
+  border-radius: 2px;
+}
+
+.d3-tip a {
+  color: #FF9900;
+  text-decoration: none;
+}
+
+/* Creates a small triangle extender for the tooltip */
+   .d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 12px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+  }
+
+  /* Style northward tooltips differently */
+ .d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+ }
+ 
+ circle{
+	fill: #ffb84d; 
+	stroke: #FFFFF;
+	stroke-width: 30px;
+   -moz-transition: all 0.3s;
+   -o-transition: all 0.3s;
+   -webkit-transition: all 0.3s;
+    transition: all 0.3s;
+
+}
+
+circle:hover {
+  fill: #ff6f00;
+  stroke: #FFFFF;
+  stroke-width: 5px;
+   -moz-transition: all 0.3s;
+   -o-transition: all 0.3s;
+   -webkit-transition: all 0.3s;
+    transition: all 0.3s;
+}
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 99%;
+    padding-bottom: 99%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 10px;
+    left: 0;
+}
+    
+
+   </style>
+</head>
+	
+<body>
+	<div class ='graph' id='container' style='background-color:#fdfdfd;'></div>
+	<script>
+	// canvas
+	var margin = 40,
+    width = 960 - margin*2,
+    height = 500 - margin*2; 
+	
+	
+	
+	// Parse the  time
+    var parseTime = d3.time.format("%H:%M").parse;
+    var formatTime = d3.time.format("%H:%M");
+    
+    //range
+    var xScale = d3.time.scale()
+                 .range([0, width])
+                 .nice(d3.time.time);
+             
+    var yScale = d3.scale.linear()
+                 .range([height, 0])
+                 .nice();
+    
+    
+    //axses
+    var xAxis = d3.svg.axis()
+               .scale(xScale)
+               .ticks(12)
+               .orient("bottom")
+               .ticks(d3.time.hour, 2)
+               .tickFormat(d3.time.format("%H"));
+ 
+    var yAxis = d3.svg.axis()
+              .scale(yScale)
+               .orient("left");
+               
+     //defineing area
+               
+    var	area = d3.svg.area()
+    .x(function(d) { return xScale(d.time); })
+    .y0(height)
+    .y1(function(d) { return yScale(d.load); });
+               
+    //valuelines
+    var valueline = d3.svg.line()
+                    .interpolate("linear")
+                    .x (function(d) {return xScale(d.time); })
+                    .y (function(d) {return yScale(d.load); });
+                    
+  // Define 'div' for tooltips
+var tip = d3.tip()
+         .attr("class", "d3-tip")
+         .offset([-10, 0])
+         .html(function(d) { return "<a href='http://google.com' class='myid'><strong>Server Load:</strong> <span style='color:#FF9900!important'></a>" + d.load + "</span>"})
+         
+    //making it responsive using SVG
+                    
+    d3.select("div#container")
+   .append("div")
+   .classed("svg-container", true) //container class to make it responsive
+   .append("svg")
+   //responsive SVG needs these 2 attributes and no width and height attr
+   .attr("preserveAspectRatio", "xMidYMid meet")
+   .attr("viewBox", "0 0 960 500")
+   //class to make it responsive
+   .classed("svg-content-responsive", true);
+   
+   
+    //svg canvas
+    var svg = d3.select(".svg-content-responsive")
+               .append("g")
+                  .attr("transform",
+                        "translate(" + margin + "," + margin + ")")
+                        .call(tip);
+                  
+     //data upload
+     d3.csv("data/load-average.csv", function(error, data) {
+           data.forEach(function(d) {
+           d.time = parseTime(d.time);
+           d.load = +d.load;
+           });
+               
+      // Scale the range of the data
+      xScale.domain(d3.extent(data, function(d) { return d.time; }));
+      yScale.domain([0, d3.max(data, function(d) { return d.load; })]);
+      
+          //area fill
+      svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("d", area);
+      
+     
+       // Add the valueline path.
+      svg.append("path")
+      .attr("class", "line")
+      .attr("d", valueline(data))
+      .style("stroke-width", 2)         // adjust line width
+      .style("stroke-linecap", "round");   // stroke-linecap type
+       
+		  
+	// draw the scatterplot
+	svg.selectAll("dot")									
+		.data(data)											
+	.enter().append("circle")								
+		.attr("r", 3)	
+		.attr("cx", function(d) { return xScale(d.time); })		 
+		.attr("cy", function(d) { return yScale(d.load); })
+		.on('mouseover', tip.show)
+        .on('mouseout', function() {
+         d3.select(".d3-tip")
+        .transition()
+        .delay(3000)
+        .duration(600)
+        .style("opacity",0)
+        .style('pointer-events', 'none')
+      });
+	
+	// Simple Tooltip stuff after this
+	    //.on("mouseover", function(d) {		
+           // tip.transition()
+				//.duration(500)	
+				//.style("opacity", 0.4);
+			//tip.transition()
+				//.duration(200)	
+				//.style("opacity", .9);	
+			//tip	.html(
+				//'<a href= "http://google.com">' + // The first <a> tag
+				//formatTime(d.time) +
+				//"</a>" +                          // closing </a> tag
+				//"<br/>"  + d.load)	 
+				//.style("left", (d3.event.pageX) + "px")			 
+				//.style("top", (d3.event.pageY - 28) + "px");
+			//});
+      
+      
+ 
+       // Add the X Axis
+       svg.append("g")
+       .attr("class", "x axis")
+       .attr("transform", "translate(0," + height + ")")
+       .call(xAxis);
+ 
+      // Add the Y Axis
+      svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+  
+      
+       // Add the text label for the x axis
+    svg.append("text")
+        .attr("transform", "translate(" + (width / 2) + " ," + (height + margin) + ")")
+        .style("text-anchor", "middle")
+        .text("Hours");
+ 
+});
+
+
+
+//second datafile updateData function
+function updateData() {
+
+    // Get the data again
+    d3.csv("data/load-average1.csv", function(error, data) {
+       data.forEach(function(d) {
+           d.time = parseTime(d.time);
+           d.load = +d.load;
+           });
+
+    	// Scale the range of the data again 
+    	x.domain(d3.extent(data, function(d) { return d.time; }));
+      y.domain([0, d3.max(data, function(d) { return d.load; })]);
+
+    // Select the section we want to apply our changes to
+    var svg = d3.select("body").transition();
+
+    // Make the changes
+        svg.select(".line")   // change the line
+            .duration(750)
+            .attr("d", valueline(data));
+            
+
+    });
+    
+    
+  //make chart nicely responsive
+
+
+  }
+
+	
+	</script>
+	
+	
+</body>	
+
+
+</body>
+</html>

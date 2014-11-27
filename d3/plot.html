@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>	
+	<style>
+		svg {
+			font-size:12px;
+		}
+		
+		.axis path {
+			stroke-width: 1.5px;
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
+		}
+		.axis line {
+			stroke-width: 1px;
+			stroke: black;
+			shape-rendering: crispEdges;
+			fill: none;
+		}
+		
+		.line {
+		  fill:none;
+		  stroke:black;
+		  stroke-width:black;
+		}
+		
+		.row {
+		  width:50%;  
+		  float: left;
+		}
+		/* apply different style ("stacked") to row class when screen < 900px*/
+		@media (max-width: 900px) {
+      .row {
+        float: none;
+        width: auto;
+        height:260px;
+      }
+    }
+	</style>
+	<head>
+		<title>svg resize</title>
+	</head>
+	<body>
+	  <div>
+	    <div >
+  	    <div class="row" id="left"></div>
+  	    <div class="row"  id="right"></div>
+  	  </div>
+  	</div>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<script>
+		
+		/* first svg element is scatter plot*/
+			var svg = d3.select("#left").append("svg")
+				.attr("viewBox", "0 0 660 260")  /* viewbox element so svg is responsive */
+			  .attr("preserveAspectRatio", "xMinYMin")
+			  .append("g")
+				.attr("height",200)
+				.attr("width",600)
+				.attr("transform","translate(30,30)");
+
+			var data = [10,12,13,15];
+			
+			var y = d3.scale.linear()
+				.domain([9, 17])
+				.range([200 ,0]);
+			var x = d3.scale.linear()
+				.domain([0, 4])
+				.range([0 ,600]);
+
+			var circle = svg.selectAll("circle")
+				.data(data)
+				.enter().append("circle");	
+
+			circle.attr("r",3)
+				.attr("cx",function(d, i){return x(i);})
+				.attr("cy",function(d) {return y(d);});
+
+
+			var yAxis = svg.append("g")
+				.attr("class","axis")
+				.call(d3.svg.axis().scale(y).orient("left"));
+
+			var xAxis = svg.append("g")
+				.attr("class", "axis")
+				.attr("transform","translate(0,200)")
+				.call(d3.svg.axis().scale(x).orient("botttom"));
+			
+			
+			
+			/* add a line plot in the "right" div */	
+			var svg2 = d3.select("#right").append("svg")
+			  .attr("viewBox","0 0 660 260")
+			  .attr("preserveAspectRatio", "xMinYMin")
+				.append("g")
+				.attr("height",200)
+				.attr("width",600)
+				.attr("transform","translate(40,30)");
+
+			var x2 = d3.scale.linear()
+				.domain([0,3])
+				.range([0,600]);
+
+			var y2 = d3.scale.linear()
+				.domain([9, 17])
+				.range([200,0]);
+
+			var line = d3.svg.line()
+				.x(function(d,i) { return x2(i); })
+				.y(function(d) { return y2(d);});
+
+			var data2 = [10, 12, 13, 15];
+
+			var path2 = svg2.append("path")
+				.data([data2])
+				.attr("class","line")
+				.attr("d",line);
+
+			var yAxis2 = svg2.append("g")
+				.attr("class", "axis")
+				.call(d3.svg.axis().scale(y2).orient("left"));
+
+			var xAxis2 = svg2.append("g")
+				.attr("class","axis")
+				.attr("transform","translate(0,200)")
+				.call(d3.svg.axis().scale(x2).orient("bottom"));
+
+			var yLabel2 = svg2.append("svg:text")
+				.text("values")
+				.attr("transform","translate(-25,100) rotate(-90)");
+
+        
+		</script>
+	</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>	
+	<style>
+		svg {
+			font-size:12px;
+		}
+		
+		.axis path {
+			stroke-width: 1.5px;
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
+		}
+		.axis line {
+			stroke-width: 1px;
+			stroke: black;
+			shape-rendering: crispEdges;
+			fill: none;
+		}
+		
+		.line {
+		  fill:none;
+		  stroke:black;
+		  stroke-width:black;
+		}
+		
+		.row {
+		  width:50%;  
+		  float: left;
+		}
+		/* apply different style ("stacked") to row class when screen < 900px*/
+		@media (max-width: 900px) {
+      .row {
+        float: none;
+        width: auto;
+        height:260px;
+      }
+    }
+	</style>
+	<head>
+		<title>orbit dashboard</title>
+	</head>
+	<body>
+	  <div>
+	    <div >
+  	    <div class="row" id="left"></div>
+  	    <div class="row"  id="right"></div>
+  	  </div>
+  	</div>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<script>
+			
+			var width = 600;
+			var height = 200;
+			
+			/* add a line plot in the "right" div */	
+			var svg2 = d3.select("#right").append("svg")
+			  .attr("viewBox","0 0 660 260")
+			  .attr("preserveAspectRatio", "xMinYMin")
+				.append("g")
+				.attr("height",200)
+				.attr("width",600)
+				.attr("transform","translate(40,30)");
+		
+		// Parse the  time
+         var parseTime = d3.time.format("%H:%M").parse;
+         var formatTime = d3.time.format("%H:%M");
+//scales
+			var x2 = d3.time.scale()
+				.range([0, width])
+				.nice(d3.time.time);
+
+			var y2 = d3.time.scale()
+				.range([height, 0])
+                .nice();
+
+		//valuelines
+         var valueline = d3.svg.line()
+                    .interpolate("linear")
+                    .x (function(d) {return x2(d.time); })
+                    .y (function(d) {return y2(d.load); });
+
+		//data upload
+     d3.csv("data/load-average.csv", function(error, data) {
+           data.forEach(function(d) {
+           d.time = parseTime(d.time);
+           d.load = +d.load;
+           });
+
+			var path2 = svg2.append("path")
+				.attr("d", valueline(data))
+				.attr("class","line")
+				.attr("d",line);
+
+			var yAxis2 = svg2.append("g")
+				.attr("class", "axis")
+				.call(d3.svg.axis().scale(y2).orient("left"));
+
+			var xAxis2 = svg2.append("g")
+				.attr("class","axis")
+				.attr("transform","translate(0,200)")
+				.call(d3.svg.axis().scale(x2).orient("bottom"));
+
+			var yLabel2 = svg2.append("svg:text")
+				.text("values")
+				.attr("transform","translate(-25,100) rotate(-90)");
+				
+			});
+
+        
+		</script>
+	</body>
+</html>
